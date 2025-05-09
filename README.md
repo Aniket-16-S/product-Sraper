@@ -54,7 +54,7 @@ Then:
 
 ---
 
-## 🎯 Future Goals
+## 🎯 Future Goals 
 
 - 📈 Extend support for scraping from more e-commerce sites like Flipkart, Meesho, Myntra, etc.
 - 💬 Add a GUI or chatbot interface to make it beginner-friendly.
