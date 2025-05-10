@@ -4,7 +4,7 @@ This Python script uses Selenium with an undetected Chrome driver to scrape prod
 
 ---
 
-## 🚀 Features
+## 🚀 Features 
 
 - 💨 **Undetectable Automation**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Uses `undetected_chromedriver` to avoid bot detection by Amazon.
 - 🕶️ **Headless Operation**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Runs in the background without opening a visible browser window.
