@@ -4,7 +4,7 @@ This Python script uses Selenium with an undetected Chrome driver to scrape prod
 
 ---
 
-## 🚀 Features
+## 🚀 Features 
 
 - 💨 **Undetectable Automation**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Uses `undetected_chromedriver` to avoid bot detection by Amazon.
 - 🕶️ **Headless Operation**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Runs in the background without opening a visible browser window.
@@ -54,7 +54,7 @@ Then:
 
 ---
 
-## 🎯 Future Goals
+## 🎯 Future Goals 
 
 - 📈 Extend support for scraping from more e-commerce sites like Flipkart, Meesho, Myntra, etc.
 - 💬 Add a GUI or chatbot interface to make it beginner-friendly.
