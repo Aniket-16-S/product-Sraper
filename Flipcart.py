@@ -1,19 +1,18 @@
-from bs4 import BeautifulSoup
-from collections.abc import Callable
+import asyncio
+import aiohttp
+import os
+import time
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-import requests
-import os
-from typing import Callable
-from functools import wraps
-import time 
+from bs4 import BeautifulSoup
 
-def start_chrome() -> None :
+driver = None
+folder = None
+
+def start_chrome():
     global driver
     options = uc.ChromeOptions()
-    options.binary_location = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
-    # Please add your coorect path.  
+    options.binary_location = r'C:\Program Files\Google\Chrome Beta\Application\chrome.exe'  # Set yours
     options.add_argument("--headless=new")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)...")
@@ -22,68 +21,88 @@ def start_chrome() -> None :
     options.add_argument("--disable-gpu")
     options.add_argument("--window-size=1920,1080")
     driver = uc.Chrome(options=options)
-    return
 
-def get_url() -> str :
+def get_url(Qur=None):
     global folder
-    query = input("Enter what you wanna Search on Flipcart : ").strip()
+    if Qur is None:
+        query = input("Enter what you wanna Search on Flipkart: ").strip()
+    else:
+        query = Qur
     folder = query
-    query = query.replace(' ', '+' )
-    url = f'https://flipkart.com/search?q={query}'
-    return url
+    query = query.replace(' ', '+')
+    return f'https://www.flipkart.com/search?q={query}'
 
-def safe_eval(func) :
-    try :
+def safe_eval(func):
+    try:
         return func()
-    except Exception :
+    except Exception:
         return "N/A"
-        # Exception ocuurs when respective info is not present on flipcarts website
 
-def process_content() :
-    driver.get(get_url())
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(3.5) 
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    product_list = soup.find_all('div', attrs={'class':"_1sdMkc LFEi7Z"})
-    # Main div element where products are listed
-    print(f"found :  {len(product_list)} items")
-    for i, product in enumerate(product_list) :
-        p_link = safe_eval(lambda : product.find('a', attrs={'class':'rPDeLR'})['href'] ) #Products page link
-        img_link = safe_eval( lambda : product.find('img', attrs={"class":"_53J4C-"})['src'] ) #Product image link
-        p_company = safe_eval( lambda : product.find('div', attrs={"class":"syl9yP"}).text ) 
-        p_name = safe_eval( lambda : product.find('a', attrs={"class":"WKTcLC"}).get_text() )
-        sec = safe_eval( lambda: product.find('a', attrs={"class":"+tlBoD", 'rel':True}) ) # section contain price, discount etc.
-        if sec != "N/A" :
-            price =safe_eval(lambda: sec.find('div', attrs={'class':"Nx9bqj"}).get_text() )
-            o_price = safe_eval(lambda: sec.find('div', attrs={'class':"yRaY8j"}).get_text()  )
-            dcount = safe_eval(lambda: sec.find('div', attrs={'class':"UkUFwK"}).get_text()  )
-        delv = safe_eval(lambda: product.find('div', attrs={"class":"yiggsN"}).get_text()  ) # delivery information.
-        if img_link != "N/A" :
-            response = requests.get(img_link)
-            time.sleep(1.5)
-            if response.status_code == 200:
-                os.makedirs(f"Flipcart/{folder}", exist_ok=True)
-                filename = f"Flipcart/{folder}/product_{i+1}.jpg"
+async def download_image(session, img_url, index):
+    if img_url == "N/A":
+        return
+    try:
+        async with session.get(img_url) as response:
+            if response.status == 200:
+                os.makedirs(f"Flipkart/{folder}", exist_ok=True)
+                filename = f"Flipkart/{folder}/product_{index+1}.jpg"
                 with open(filename, "wb") as f:
-                    f.write(response.content)
-                    print(f"\nImage saved as product_{i+1}.jpg")
+                    f.write(await response.read())
+                print(f"Image saved as product_{index+1}.jpg")
             else:
-                print("\nFailed to download image.")
+                print(f"Failed to download image {index+1}")
+    except Exception as e:
+        print(f"Error downloading image {index+1}: {e}")
 
-        print(f"p link : {p_link}\nname : {p_company + " " + p_name}, \nprice :{price} i.e. {o_price} with {dcount} \ndelv : {delv} ")
-        print("________________________________________________________________________________________________________________")
-    return
+async def process_product(session, product, index):
+    p_link = safe_eval(lambda: product.find('a', {'class': 'rPDeLR'})['href'])
+    img_link = safe_eval(lambda: product.find('img', {'class': '_53J4C-'})['src'])
+    p_company = safe_eval(lambda: product.find('div', {'class': 'syl9yP'}).text)
+    p_name = safe_eval(lambda: product.find('a', {'class': 'WKTcLC'}).get_text())
+    sec = safe_eval(lambda: product.find('a', {'class': '+tlBoD', 'rel': True}))
+    
+    price = o_price = dcount = "N/A"
+    if sec != "N/A":
+        price = safe_eval(lambda: sec.find('div', {'class': 'Nx9bqj'}).get_text())
+        o_price = safe_eval(lambda: sec.find('div', {'class': 'yRaY8j'}).get_text())
+        dcount = safe_eval(lambda: sec.find('div', {'class': 'UkUFwK'}).get_text())
+    
+    delv = safe_eval(lambda: product.find('div', {'class': 'yiggsN'}).get_text())
 
-        
+    print("___START___")
+    print("from Flipkart")
+    print(f"p link : {p_link}")
+    print(f"name : {p_company} {p_name}")
+    print(f"price : {price} i.e. {o_price} with {dcount}")
+    print(f"delv : {delv}")
+    print("___END___")
 
-def main() :
-    try :
+    await download_image(session, img_link, index)
+
+async def process_content(Qur=None):
+    url = get_url(Qur)
+    driver.get(url)
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(3.5)
+    soup = BeautifulSoup(driver.page_source, 'html.parser')
+    product_list = soup.find_all('div', {'class': "_1sdMkc LFEi7Z"})
+    print(f"found : {len(product_list)} items")
+
+    async with aiohttp.ClientSession() as session:
+        tasks = [process_product(session, product, i) for i, product in enumerate(product_list)]
+        await asyncio.gather(*tasks)
+
+def fetch(Qur=None):
+    try:
         start_chrome()
-        process_content()
-    except Exception as e :
+        asyncio.run(process_content(Qur))
+    except Exception as e:
         print(e)
-    finally :
-        driver.quit()
+    finally:
+        if 'driver' in globals() and driver:
+            driver.quit()
+        else:
+            pass
 
-if __name__ == '__main__' :
-    main()
+if __name__ == '__main__':
+    fetch()

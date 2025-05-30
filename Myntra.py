@@ -1,82 +1,103 @@
-from playwright.sync_api import sync_playwright
-import requests
 import os
-import time
+import asyncio
+from playwright.async_api import async_playwright
+import aiohttp
 
+folder = None
 
-def get_url() -> str :
+def get_url(Query) -> str:
     global folder
-    query = input("Enter what you wanna Search on Myntra : ").strip()
+    if Query is None:
+        query = input("Enter what you wanna Search on Myntra : ").strip()
+    else:
+        query = Query
     folder = query
-    query = query.replace(' ', '+' )
-    url = f'https://www.myntra.com/{query}?rawQuery={query}'
-    return url
+    query = query.replace(' ', '+')
+    return f'https://www.myntra.com/{query}?rawQuery={query}'
 
-def smooth_scroll(page, delay=0.05, step=500, pause_at_end=2):
-    scroll_height = page.evaluate("() => document.body.scrollHeight")
+async def smooth_scroll(page, delay=0.05, step=500, pause_at_end=2):
+    scroll_height = await page.evaluate("() => document.body.scrollHeight")
     curr_pos = 0
     while curr_pos < scroll_height:
-        page.evaluate(f"window.scrollTo(0, {curr_pos});")
-        time.sleep(delay)
+        await page.evaluate(f"window.scrollTo(0, {curr_pos});")
+        await asyncio.sleep(delay)
         curr_pos += step
-        scroll_height = page.evaluate("() => document.body.scrollHeight")
+        scroll_height = await page.evaluate("() => document.body.scrollHeight")
+    await asyncio.sleep(pause_at_end)
 
-    time.sleep(pause_at_end)
+async def download_image(session, url, i):
+    try:
+        async with session.get(url) as response:
+            if response.status == 200:
+                os.makedirs(f"Myntra/{folder}", exist_ok=True)
+                filename = f"Myntra/{folder}/product_{i+1}.jpg"
+                with open(filename, "wb") as f:
+                    f.write(await response.read())
+                print(f"Image saved as product_{i+1}.jpg")
+            else:
+                print(f"Failed to download image {i+1}")
+    except Exception as e:
+        print(f"Error downloading image {i+1}: {e}")
 
+async def process_product(i, product, session):
+    a_tag = await product.query_selector("a[href]")
+    p_link = await a_tag.get_attribute("href") if a_tag else None
 
+    img_tag = await product.query_selector("img[src]")
+    img_link = await img_tag.get_attribute("src") if img_tag else None
 
-with sync_playwright() as p:
-    browser = p.webkit.launch(headless=True, args=["--disable-http2"])
-    page = browser.new_page(
-    user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
-    viewport={"width": 1280, "height": 800},
-    locale="en-US"
-    )
+    p_info = await product.query_selector("div.product-productMetaInfo")
 
-    page.goto(get_url())
-    page.wait_for_load_state('load')
-    page.wait_for_selector("li.product-base")
-    smooth_scroll(page, delay=0.05, step=300, pause_at_end=3)
-    product_list = page.query_selector_all("li.product-base")
+    title = ""
+    if p_info:
+        h3 = await p_info.query_selector("h3")
+        h4 = await p_info.query_selector("h4")
+        h3_text = (await h3.text_content()).strip() if h3 else ""
+        h4_text = (await h4.text_content()).strip() if h4 else ""
+        title = f"{h3_text} {h4_text}".strip()
 
+    price_unformatted = ""
+    if p_info:
+        price_tag = await p_info.query_selector("div.product-price")
+        price_unformatted = (await price_tag.text_content()).strip() if price_tag else ""
 
-    for i, product in enumerate(product_list):
-        
-        a_tag = product.query_selector("a[href]")
-        p_link = a_tag.get_attribute("href") if a_tag else None
+    print("___START___")
+    print("from Myntra")
+    print(f"Product link : https://myntra.com/{p_link}")
+    print(f"img link : {img_link}")
+    print(f"title : {title}")
+    print(f"price : {price_unformatted}")
+    print("___END___")
 
-        img_tag = product.query_selector("img[src]")
-        img_link = img_tag.get_attribute("src") if img_tag else None
+    if img_link:
+        await download_image(session, img_link, i)
 
-        p_info = product.query_selector("div.product-productMetaInfo")
+async def fetch(url=None, Query=None):
+    if url is None:
+        url = get_url(Query)
 
-        title = ""
-        if p_info:
-            h3 = p_info.query_selector("h3")
-            h4 = p_info.query_selector("h4")
-            h3_text = h3.text_content().strip() if h3 else ""
-            h4_text = h4.text_content().strip() if h4 else ""
-            title = f"{h3_text} {h4_text}".strip()
-        price_unformatted = ""
-        if p_info:
-            price_tag = p_info.query_selector("div.product-price")
-            price_unformatted = price_tag.text_content().strip() if price_tag else ""
+    async with async_playwright() as p:
+        browser = await p.webkit.launch(headless=True, args=["--disable-http2"])
+        page = await browser.new_page(
+            user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36",
+            viewport={"width": 1280, "height": 800},
+            locale="en-US"
+        )
+        await page.goto(url)
+        await page.wait_for_load_state('load')
+        await page.wait_for_selector("li.product-base")
+        await smooth_scroll(page, delay=0.05, step=300, pause_at_end=3)
+        product_list = await page.query_selector_all("li.product-base")
 
-        print(f"Product link : https://myntra.com/{p_link} ", f"img link : {img_link}", f"title : {title}", f"price : {price_unformatted}", sep="\n")
-        if img_link:
-            try:
-                response = requests.get(img_link)
-                if response.status_code == 200:
-                    os.makedirs(folder, exist_ok=True)
-                    filename = f"{folder}/product_{i+1}.jpg"
-                    with open(filename, "wb") as f:
-                        f.write(response.content)
-                        print(f"\nImage saved as product_{i+1}.jpg")
-                else:
-                    print("\nFailed to download image.")
-            except Exception as e:
-                print(f"\nError downloading image: {e}")
+        tasks = []
 
-        print("\n\n\n")
-    
-    browser.close()
+        async with aiohttp.ClientSession() as session:
+            for i, product in enumerate(product_list):  
+                tasks.append(process_product(i, product, session))
+
+            await asyncio.gather(*tasks)
+
+        await browser.close()
+
+if __name__ == "__main__":
+    asyncio.run(fetch())
