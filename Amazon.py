@@ -12,7 +12,8 @@ import os
 def start_chrome() -> None :
     global driver
     options = uc.ChromeOptions()
-    options.binary_location = r'C:\Program Files\Google\Chrome Beta\Application\chrome.exe'
+    options.binary_location = r'C:\Program Files\Google\Chrome\Application\chrome.exe' 
+    # Please make sure to add your own path for browser.
     options.add_argument("--headless=new")
     options.add_argument("--disable-blink-features=AutomationControlled")
     options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)...")
@@ -35,7 +36,7 @@ def get_pincode() -> int :
     pincode = input("Enter your pincode to get relevent delivery info (else hit enter) :")
     try :
         pincode = int(pincode)
-        if not len(str(pincode)) == 6 : #str pincode
+        if not len(str(pincode)) == 6 : 
             print("Pincode incorrect")
             return None
         return pincode
@@ -127,7 +128,7 @@ def process_content() :
             else:
                 print("\nFailed to download image.")
         except Exception as e:
-            print(f"Skiping prdct {i+1} because ", next((s for s in [e[:91]]))) # genrator function - first 90 chars of exptn ...
+            print(f"Skiping prdct {i+1} because ", next((s for s in [e[:91]]))) # genrator -> first 90 chars of exception ...
             continue
     print("Complete")
     return
