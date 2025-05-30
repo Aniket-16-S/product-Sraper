@@ -119,8 +119,8 @@ def process_content() :
             response = requests.get(img_url)
             time.sleep(1.5)
             if response.status_code == 200:
-                os.makedirs(f"{folder}", exist_ok=True)
-                filename = f"{folder}/product_{i+1}.jpg"
+                os.makedirs(f"Amazon/{folder}", exist_ok=True)
+                filename = f"Amazon/{folder}/product_{i+1}.jpg"
                 with open(filename, "wb") as f:
                     f.write(response.content)
                     print(f"\nImage saved as product_{i+1}.jpg")
