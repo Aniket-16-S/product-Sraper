@@ -31,7 +31,7 @@ playwright install
 ## 💻 How To Run
 Clone this repo :
 ```bash
-git clone https://github.com/Aniket-16-S/product-Scraper.git
+git clone [https://github.com/Aniket-16-S/product-Scraper.git](https://github.com/Aniket-16-S/product-Sraper.git)
 cd product-Scraper
 ``` 
 install dependencies :
