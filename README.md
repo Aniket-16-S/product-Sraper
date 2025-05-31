@@ -1,73 +1,93 @@
-# 🛒 Amazon Product Scraper (Headless & Stealth Mode)
+# ⚡ Multi-Web Product Scraper (Stealth Mode | Blazing Fast) ⚡
 
-This Python script uses Selenium with an undetected Chrome driver to scrape product info from **Amazon India** based on a user’s search query. It’s all automated — from search to saving product images locally — and works headlessly to stay stealthy.
-
----
-
-## 🚀 Features 
-
-- 💨 **Undetectable Automation**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Uses `undetected_chromedriver` to avoid bot detection by Amazon.
-- 🕶️ **Headless Operation**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Runs in the background without opening a visible browser window.
-- 📦 **Delivery Info Customization**&nbsp;&nbsp;&nbsp;: Optionally adds your PIN code to get location-relevant delivery details.
-- 🧠 **Fully Generalized Search**&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;: Just type any product (literally *any*) and it adapts — no code changes needed.  
-  > _This makes it super useful across various use-cases like price comparison, market research, or just casual tech flexing._
-- 🖼️ **Image Downloader**           &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;: Saves product images for offline access or ML tasks.
-- 📊 **Review + Price Info**        &nbsp;&nbsp;&nbsp; &nbsp;&nbsp;&nbsp;: Pulls star ratings, review count, sold estimates, MRP, current price, and discounts.
-- 🔗 **Direct Product Links**       &nbsp;&nbsp;&nbsp; &nbsp;: Each item includes a direct Amazon link for deep dive or buying later.
+### Search Amazon, Flipkart, and Myntra — *all at once*, in under 20 seconds.  
+### Built with async Playwright for stealth, speed.
 
 ---
 
-## 🔧 Requirements
+## 🚀 What's Cookin’ :
 
-Install the required packages before running:
+- 🔍 **Multi-Site Support**: Scrapes all products from Amazon, Flipkart, and Myntra ( more coming soon . . . ).
+- ⚡ **SuperFast Scraping**: Built with `asyncio`, `aiohttp`, and `Playwright`, scrapes *around 150 products within 20 sec* 💨
+- 🕶️ **Headless & Stealth Mode**: Runs in the background and mimics human behavior to dodge bot detection.
+- 📈 **150+ Products in 18 Seconds**: Yup, tested — ~152 products loaded in one go ( 18-20s sec ).
+- 📁 **Clean Output**: Products returned with title, price, rating, image, and direct link.
+- 🖼️ **Photo Gallery** : Product photos are saved with dedicated folder.
+- 🧠 **Why This Slaps**: Manually opening 3 sites, scrolling forever, and remembering deals? Nah. Just type what you want — this gives you 150+ options instantly.
 
-```bash
-pip install selenium undetected-chromedriver requests
+---
+
+## 🛠️ Requirements
+
+Install the necessary packages:
+
+```bash / cmd
+pip install playwright asyncio aiohttp
 ```
-
-Also make sure:
-- Chrome Beta is installed (used in `binary_location`).
-- You edit the path to your Chrome binary if it's different.
-
----
-
-## 💻 How To Use
-
-Run the script:
-
-```bash
-python script_name.py
+Then install Playwright’s browser binaries:
+```bash / cmd
+playwright install
 ```
+## 💻 How To Run
+Clone this repo :
+```bash
+git clone https://github.com/Aniket-16-S/product-Scraper.git
+cd product-Scraper
+``` 
+install dependencies :
+```bash
+pip install -r requirements.txt
+playwright install
+```
+Run the async scraper :
+```bash
+python main_scraper.py
+```
+Enter your product keyword and let it cook 🔥 for 20 secs.
 
-Then:
-
-1. Enter your product search term.
-2. Optionally enter your PIN code for delivery customization.
-3. Sit back &nbsp; it’ll scroll, scrape, and even download product images for you.
 
 ---
 
-## 📁 Output
+## 📂 Output
+#### Products from all 3 sites shown in your terminal.
 
-- Console output shows all details for each product.
-- Product images are saved in a folder named after your search query.
+#### Clean, structured format — easy to compare.
+
+#### Great for research, trend tracking, or flexing that dev power.
 
 ---
 
-## 🎯 Future Goals 
+## 🔮 Future Goals
 
-- 📈 Extend support for scraping from more e-commerce sites like Flipkart, Meesho, Myntra, etc.
-- 💬 Add a GUI or chatbot interface to make it beginner-friendly.
-- 📦 Export scraped data to CSV/Excel for data analysis.
+#### 🛍️ Add support for more sites like Ajio, Meesho, Nykaa, etc.
+
+#### 🎛️ GUI version for non-coders
+
+#### well document the code
+
+---
+## ⭐ Why This Could Blow Up
+#### Tired of opening 10 tabs to compare products ? This solves that.
+
+#### Get more than 100 products scraped at your terminal in 16 - 20 secs. ( assuming decent network connectivity. )
+
+#### It’s async — and devs LOVE async.
+
+#### Just enter what you want to search. Thats it ! Rest is automated.
+
+#### With a clean UI or web version, this could go viral as a price-compare tool.
+
+#### Dev-friendly = easy stars + forks on GitHub.
+
+#### Great side-project flex for portfolios or hackathons.
 
 ---
 
 ## ⚠️ Legal Note
-
-This script is for **educational purposes only**. Always respect website's `robots.txt` policies and terms'n conditions of service.
+### This project is for educational use only. Respect each site’s terms of service and robots.txt.
 
 ---
 
-## 🤝 Contributions
-
-Pull requests and feature ideas are totally welcome. Let's make this into a full-blown multi-site scraper. 🔥
+## 🤝 Contributions Welcome
+ Got new site targets or bug fixes? Open a PR or drop ideas in issues!
+#### Let’s build the ultimate cross-site scraper 🧃
