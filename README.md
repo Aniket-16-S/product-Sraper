@@ -32,7 +32,7 @@ playwright install
 Clone this repo :
 ```bash
 git clone https://github.com/Aniket-16-S/product-Sraper.git
-cd product-Scraper 
+cd product-Sraper 
 ``` 
 install dependencies :
 ```bash
