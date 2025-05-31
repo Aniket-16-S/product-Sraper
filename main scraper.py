@@ -31,7 +31,7 @@ async def main():
             print(f'\n{prod}\n\n')
             lens += 1
 
-    print("Time : ", perfo, "Comparisons : ", lens-5)
+    print("Time : ", perfo, "Comparisons : ", lens-6) # around 6 products are blank from amazon. No idea why . . .
 
 if __name__ == '__main__':
     asyncio.run(main())
