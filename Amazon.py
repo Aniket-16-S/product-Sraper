@@ -3,27 +3,12 @@ import aiohttp
 import os
 import time
 import random
-import requests
-import undetected_chromedriver as uc
-from selenium.webdriver.common.by import By
+from playwright.async_api import async_playwright
+import json
 
-driver = None
+result = []
 
-def start_chrome():
-    global driver
-    options = uc.ChromeOptions()
-    options.binary_location = r'C:\Program Files\Google\Chrome Beta\Application\chrome.exe'
-    options.add_argument("--headless=new")
-    options.add_argument("--disable-blink-features=AutomationControlled")
-    options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64)...")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
-    options.add_argument("--window-size=1920,1080")
-    driver = uc.Chrome(options=options)
-
-def get_url(Qur=None, p_c=None):
-    global folder
+async def get_url(Qur=None, p_c=None):
     if Qur is None:
         query = input("Enter what you wanna Search on Amazon : ").strip()
     else:
@@ -35,30 +20,7 @@ def get_url(Qur=None, p_c=None):
     folder = query
     query = query.replace(' ', '+')
     url = f'https://www.amazon.in/s?k={query}'
-    return url, pc
-
-def navigate(url=None, p_c=None, Qur=None):
-    if url is None:
-        url, p_c = get_url(Qur=Qur, p_c=p_c)
-    driver.get(url)
-    print("Connecting with Amazon server . . .")
-    time.sleep(random.uniform(3, 5))
-    if p_c is not None:
-        try:
-            driver.find_element(By.ID, "nav-global-location-popover-link").click()
-            time.sleep(1.5)
-            try:
-                pincode_input = driver.find_element(By.ID, "GLUXZipUpdateInput")
-            except:
-                pincode_input = driver.find_element(By.XPATH, "//input[@aria-label='or enter an Indian pincode']")
-            pincode_input.clear()
-            pincode_input.send_keys(p_c)
-            apply_button = driver.find_element(By.ID, "GLUXZipUpdate")
-            apply_button.click()
-            print("waiting to update . . .")
-            time.sleep(5)
-        except Exception as e:
-            print("Something went wrong while entering pincode ", e)
+    return url, pc, folder
 
 async def download_image(session, url, folder, i):
     try:
@@ -69,88 +31,128 @@ async def download_image(session, url, folder, i):
                 filename = f"Amazon/{folder}/product_{i+1}.jpg"
                 with open(filename, "wb") as f:
                     f.write(content)
-                print(f"Image saved as product_{i+1}.jpg")
+                #print(f"Image saved as product_{i+1}.jpg")
             else:
-                print(f"Failed to download image for product {i+1}")
+                pass
+                #print(f"Failed to download image for product {i+1}")
     except Exception as e:
-        print(f"Error downloading image for product {i+1}: {e}")
+        pass
+        
+        #print(f"Error downloading image for product {i+1}: {e}")
 
 async def process_product(session, product, i, folder):
     try:
-        img_url = product.find_element(By.TAG_NAME, 'img').get_attribute('src') or None
-        title_section = product.find_element(By.XPATH, ".//div[@data-cy='title-recipe']")
-        product_url = title_section.find_element(By.XPATH, ".//a[@class]").get_attribute('href') or None
-        product_title = []
-        h2s = title_section.find_elements(By.TAG_NAME, 'h2')
-        for h2 in h2s:
-            product_title.append(h2.text.strip())
+        img = await product.query_selector("img")
+        img_url = await img.get_attribute('src') if img else None
 
-        try :
-            review_secn = product.find_element(By.XPATH, ".//div[@data-cy='reviews-block']")
-            stars = driver.execute_script("return arguments[0].textContent;", review_secn.find_element(By.XPATH, ".//span[@class='a-icon-alt']") ).strip()
-            no_of_reviews = driver.execute_script("return arguments[0].textContent;", review_secn.find_element(By.XPATH, ".//span[@aria-hidden='true']") ).strip()
-            try :
-                sold = driver.execute_script("return arguments[0].textContent;", review_secn.find_element(By.XPATH, ".//span[@class='a-size-base a-color-secondary']") ).strip()
-                # Not Available always on page
-            except :
+        title_section = await product.query_selector("[data-cy='title-recipe']")
+        title_links = await title_section.query_selector_all("h2") if title_section else []
+        product_title = [await h2.inner_text() for h2 in title_links]
+        a_tag = await title_section.query_selector("a") if title_section else None
+        product_url = await a_tag.get_attribute('href') if a_tag else None
+
+        try:
+            review_secn = await product.query_selector("[data-cy='reviews-block']")
+            stars = (await (await review_secn.query_selector(".a-icon-alt")).inner_text()).strip()
+            no_of_reviews = (await (await review_secn.query_selector("[aria-hidden='true']")).inner_text()).strip()
+            try:
+                sold = (await (await review_secn.query_selector(".a-size-base.a-color-secondary")).inner_text()).strip()
+            except:
                 sold = ""
-        except Exception as e:
+        except:
             stars = 'N/A'
             no_of_reviews = ""
-            sold = "" 
-        try :
-            price_secn = product.find_element(By.XPATH, ".//div[@data-cy='price-recipe']") 
-            a = price_secn.find_element(By.XPATH, ".//a[@aria-describedby='price-link']")
-            cp = driver.execute_script("return arguments[0].textContent;", a.find_element(By.XPATH, ".//span[@class='a-price-whole']")) or None
-            mrp = a.find_element(By.XPATH, ".//div[@class='a-section aok-inline-block']").get_attribute('aria-hidden').strip() or None
-            discount = driver.execute_script("return arguments[0].textContent;", price_secn.find_element(By.CSS_SELECTOR, "div.a-row > span:last-of-type") ) or None
-        except :
-            discount = ""
-            mrp = ""
-            cp = ""   # if price not found,  ... this is when byuing options are not available     
-        try :
-            delivery_secn = product.find_element(By.XPATH, ".//div[@data-cy='delivery-recipe']")
-            final_d = str(driver.execute_script("return arguments[0].textContent;", delivery_secn)).replace('Or', ' Or') or None
-        except Exception :
+            sold = ""
+
+        try:
+            price_secn = await product.query_selector("[data-cy='price-recipe']")
+            a = await price_secn.query_selector("[aria-describedby='price-link']")
+            cp = (await (await a.query_selector(".a-price-whole")).inner_text()).strip()
+            mrp = await a.get_attribute("aria-hidden")
+            discount_el = await price_secn.query_selector("div.a-row > span:last-of-type")
+            discount = (await discount_el.inner_text()).strip() if discount_el else ""
+        except:
+            cp = mrp = discount = ""
+
+        try:
+            delivery_secn = await product.query_selector("[data-cy='delivery-recipe']")
+            final_d = (await delivery_secn.inner_text()).replace('Or', ' Or') if delivery_secn else ""
+        except:
             final_d = ""
-        print(f"___START___")
-        print("from Amazon :")
-        print(f"Name : {''.join(s + ' ' for s in product_title)}")
-        print(f"Product link : {product_url}\n")
+
+        name = ' '.join(product_title)
+        # print(f"___START___")
+        # print("from Amazon :")
+        # print(f"Name : {name}")
+        # print(f"Product link : {product_url}\n")
+        # print(f"stars:{stars}, no of rev : {no_of_reviews} , {sold} sold in past month")
+        # print(f"Price : {cp} ( {mrp} with {discount} off)")
+        # print(f"Delivery : {final_d}")
+        # print(f"___END___")
+
+        result.append({
+            "Name": name,
+            "product_link": f"https://www.amazon.in{product_url}" if product_url else None,
+            "rev": f"stars:{stars}, no of rev : {no_of_reviews} , {sold} sold in past month",
+            "price": f"Price : {cp} ( {mrp} with {discount} off)",
+            "delivery": f"Delivery : {final_d}"
+        })
 
         if img_url:
             await download_image(session, img_url, folder, i)
 
-        print("___END___")
     except Exception as e:
-        print(f"Skipping product {i+1} because {e}")
+        pass
+        
+        #print(f"Skipping product {i+1} because {e}")
 
-async def main_process(driver, folder):
-    products = driver.find_elements(By.XPATH, "//div[@role='listitem']")
-    print(f"Found {len(products)} products")
-    async with aiohttp.ClientSession() as session:
-        tasks = [process_product(session, product, i, folder) for i, product in enumerate(products)]
-        await asyncio.gather(*tasks)
+async def process_content(Qur=None, p_c=None):
+    url, pc, folder = await get_url(Qur=Qur, p_c=p_c)
 
-def end():
-    try:
-        driver.quit()
-    except Exception:
-        if 'driver' in globals() and driver:
-            print("Driver exists but couldn't be deleted somehow . . .")
-        else:
-            pass
-    print("browser closed!")
+    async with async_playwright() as p:
+        browser = await p.chromium.launch(headless=True)
+        context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)...")
+        page = await context.new_page()
 
-def fetch(url=None, pc=None, Query=None):
-    try:
-        start_chrome()
-        navigate(url=url, p_c=pc, Qur=Query)
-        asyncio.run(main_process(driver, folder))
-    except Exception as e:
-        print(e)
-    finally:
-        end()
+        #print("Connecting with Amazon server . . .")
+        await page.goto(url)
+        await page.wait_for_timeout(random.uniform(3000, 5000))
+
+        # Handle pincode
+        if pc:
+            try:
+                await page.click("#nav-global-location-popover-link")
+                await page.wait_for_timeout(1500)
+                try:
+                    pincode_input = await page.query_selector("#GLUXZipUpdateInput")
+                except:
+                    pincode_input = await page.query_selector("//input[@aria-label='or enter an Indian pincode']")
+                await pincode_input.fill(pc)
+                await page.click("#GLUXZipUpdate")
+                print("waiting to update . . .")
+                await page.wait_for_timeout(5000)
+            except Exception as e:
+                print("Something went wrong while entering pincode ", e)
+
+        # Scraping part
+        products = await page.query_selector_all("div[role='listitem']")
+        #print(f"Found {len(products)} products")
+
+        async with aiohttp.ClientSession() as session:
+            tasks = [process_product(session, product, i, folder) for i, product in enumerate(products)]
+            await asyncio.gather(*tasks)
+
+        await browser.close()
+
+    return result
+
+async def fetch(Qur = None) :
+    try :
+        await process_content(Qur)
+    except Exception as e :
+        print("from amazon fetch :", e)
+    return json.dumps(result)
+
 
 if __name__ == "__main__":
-    fetch()
+    asyncio.run(fetch())

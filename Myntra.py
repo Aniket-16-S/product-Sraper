@@ -2,8 +2,10 @@ import os
 import asyncio
 from playwright.async_api import async_playwright
 import aiohttp
+import json
 
 folder = None
+result = []
 
 def get_url(Query) -> str:
     global folder
@@ -33,11 +35,13 @@ async def download_image(session, url, i):
                 filename = f"Myntra/{folder}/product_{i+1}.jpg"
                 with open(filename, "wb") as f:
                     f.write(await response.read())
-                print(f"Image saved as product_{i+1}.jpg")
+                #print(f"Image saved as product_{i+1}.jpg")
             else:
-                print(f"Failed to download image {i+1}")
+                pass
+                #print(f"Failed to download image {i+1}")
     except Exception as e:
-        print(f"Error downloading image {i+1}: {e}")
+        #print(f"Error downloading image {i+1}: {e}")
+        pass
 
 async def process_product(i, product, session):
     a_tag = await product.query_selector("a[href]")
@@ -61,13 +65,18 @@ async def process_product(i, product, session):
         price_tag = await p_info.query_selector("div.product-price")
         price_unformatted = (await price_tag.text_content()).strip() if price_tag else ""
 
-    print("___START___")
-    print("from Myntra")
-    print(f"Product link : https://myntra.com/{p_link}")
-    print(f"img link : {img_link}")
-    print(f"title : {title}")
-    print(f"price : {price_unformatted}")
-    print("___END___")
+    # print("___START___")
+    # print("from Myntra")
+    # print(f"Product link : https://myntra.com/{p_link}")
+    # print(f"img link : {img_link}")
+    # print(f"title : {title}")
+    # print(f"price : {price_unformatted}")
+    # print("___END___")
+    result.append({
+        "Name" : f"title : {title}",
+        "Product-link" : f"Product link : https://myntra.com/{p_link}" ,
+        "Price" : f"price : {price_unformatted}"
+    })
 
     if img_link:
         await download_image(session, img_link, i)
@@ -98,6 +107,8 @@ async def fetch(url=None, Query=None):
             await asyncio.gather(*tasks)
 
         await browser.close()
+        #print(*result)
+        return json.dumps(result)
 
 if __name__ == "__main__":
     asyncio.run(fetch())
