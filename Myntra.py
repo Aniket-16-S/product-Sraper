@@ -72,6 +72,9 @@ async def process_product(i, product, session):
     # print(f"title : {title}")
     # print(f"price : {price_unformatted}")
     # print("___END___")
+
+    #                                          Please make sure To Uncomment this if running as __Main__
+    
     result.append({
         "Name" : f"title : {title}",
         "Product-link" : f"Product link : https://myntra.com/{p_link}" ,
