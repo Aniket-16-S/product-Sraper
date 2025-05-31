@@ -67,6 +67,10 @@ async def process_product(session, product, index):
     # print(f"price : {price} i.e. {o_price} with {dcount}")
     # print(f"delv : {delv}")
     # print("___END___")
+    
+    #                                          Please make sure To Uncomment this if running as __Main__
+    
+    
     result.append({
         "Product_link": f"p link : {p_link}",
         "Name": f"name : {p_company} {p_name}",
