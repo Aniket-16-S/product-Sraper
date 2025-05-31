@@ -1,6 +1,6 @@
 # ⚡ Multi-Web Product Scraper (Stealth Mode | Blazing Fast) ⚡
 
-### Search Amazon, Flipkart, and Myntra — *all at once*, in under 20 seconds.  
+### Search Amazon, Flipkart, and Myntra — *all at once*, under 20 seconds.  
 ### Built with async Playwright for stealth, speed.
 
 ---
