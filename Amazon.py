@@ -90,6 +90,9 @@ async def process_product(session, product, i, folder):
         # print(f"Delivery : {final_d}")
         # print(f"___END___")
 
+        #                                          Please make sure To Uncomment this if running as __Main__
+        #    Please check local folder for Images.
+
         result.append({
             "Name": name,
             "product_link": f"https://www.amazon.in{product_url}" if product_url else None,
@@ -146,9 +149,9 @@ async def process_content(Qur=None, p_c=None):
 
     return result
 
-async def fetch(Qur = None) :
+async def fetch(Qur = None, pincode=None) :
     try :
-        await process_content(Qur)
+        await process_content(Qur, p_c=pincode)
     except Exception as e :
         print("from amazon fetch :", e)
     return json.dumps(result)
