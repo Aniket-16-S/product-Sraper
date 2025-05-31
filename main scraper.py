@@ -30,8 +30,10 @@ async def main():
         for prod in take :
             print(f'\n{prod}\n\n')
             lens += 1
-
-    print("Time : ", perfo, "Comparisons : ", lens-6) # around 6 products are blank from amazon. No idea why . . .
+    """
+                            Please CHECK Folder 'product-Scraper' for downloaded IMAGES
+    """
+    print("Time : ", perfo, "Comparisons : ", lens-6) # around 4-6 dictionaries are always blank from Amazon.py No idea why . . .
 
 if __name__ == '__main__':
     asyncio.run(main())
