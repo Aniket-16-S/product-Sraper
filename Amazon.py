@@ -4,9 +4,8 @@ import os
 import time
 import random
 from playwright.async_api import async_playwright
-import json
 
-result = []
+queue = None
 
 async def get_url(Qur=None, p_c=None):
     if Qur is None:
@@ -31,14 +30,8 @@ async def download_image(session, url, folder, i):
                 filename = f"Amazon/{folder}/product_{i+1}.jpg"
                 with open(filename, "wb") as f:
                     f.write(content)
-                #print(f"Image saved as product_{i+1}.jpg")
-            else:
-                pass
-                #print(f"Failed to download image for product {i+1}")
-    except Exception as e:
+    except Exception:
         pass
-        
-        #print(f"Error downloading image for product {i+1}: {e}")
 
 async def process_product(session, product, i, folder):
     try:
@@ -81,81 +74,68 @@ async def process_product(session, product, i, folder):
             final_d = ""
 
         name = ' '.join(product_title)
-        # print(f"___START___")
-        # print("from Amazon :")
-        # print(f"Name : {name}")
-        # print(f"Product link : {product_url}\n")
-        # print(f"stars:{stars}, no of rev : {no_of_reviews} , {sold} sold in past month")
-        # print(f"Price : {cp} ( {mrp} with {discount} off)")
-        # print(f"Delivery : {final_d}")
-        # print(f"___END___")
 
-        #                                          Please make sure To Uncomment this if running as __Main__
-        #    Please check local folder for Images.
-
-        result.append({
+        info = {
             "Name": name,
             "product_link": f"https://www.amazon.in{product_url}" if product_url else None,
-            "rev": f"stars:{stars}, no of rev : {no_of_reviews} , {sold} sold in past month",
+            "review": f"stars:{stars}, no of rev : {no_of_reviews} , {sold} sold in past month",
             "price": f"Price : {cp} ( {mrp} with {discount} off)",
             "delivery": f"Delivery : {final_d}"
-        })
+        }
 
         if img_url:
             await download_image(session, img_url, folder, i)
 
-    except Exception as e:
-        pass
-        
-        #print(f"Skipping product {i+1} because {e}")
+        if name != '':
+            await queue.put(info)
 
-async def process_content(Qur=None, p_c=None):
+    except Exception:
+        pass
+
+async def process_content(Qur=None, p_c=None, context=None):
+    global queue
     url, pc, folder = await get_url(Qur=Qur, p_c=p_c)
 
-    async with async_playwright() as p:
+    if not context:
+        p = await async_playwright().start()
         browser = await p.chromium.launch(headless=True)
         context = await browser.new_context(user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64)...")
-        page = await context.new_page()
 
-        #print("Connecting with Amazon server . . .")
-        await page.goto(url)
-        await page.wait_for_timeout(random.uniform(3000, 5000))
+    page = await context.new_page()
+    await page.goto(url)
+    await page.wait_for_timeout(random.uniform(3000, 5000))
 
-        # Handle pincode
-        if pc:
+    if pc:
+        try:
+            await page.click("#nav-global-location-popover-link")
+            await page.wait_for_timeout(1500)
             try:
-                await page.click("#nav-global-location-popover-link")
-                await page.wait_for_timeout(1500)
-                try:
-                    pincode_input = await page.query_selector("#GLUXZipUpdateInput")
-                except:
-                    pincode_input = await page.query_selector("//input[@aria-label='or enter an Indian pincode']")
-                await pincode_input.fill(pc)
-                await page.click("#GLUXZipUpdate")
-                print("waiting to update . . .")
-                await page.wait_for_timeout(5000)
-            except Exception as e:
-                print("Something went wrong while entering pincode ", e)
+                pincode_input = await page.query_selector("#GLUXZipUpdateInput")
+            except:
+                pincode_input = await page.query_selector("//input[@aria-label='or enter an Indian pincode']")
+            await pincode_input.fill(pc)
+            await page.click("#GLUXZipUpdate")
+            await page.wait_for_timeout(5000)
+        except Exception:
+            pass
 
-        # Scraping part
-        products = await page.query_selector_all("div[role='listitem']")
-        #print(f"Found {len(products)} products")
+    products = await page.query_selector_all("div[role='listitem']")
 
-        async with aiohttp.ClientSession() as session:
-            tasks = [process_product(session, product, i, folder) for i, product in enumerate(products)]
-            await asyncio.gather(*tasks)
+    async with aiohttp.ClientSession() as session:
+        tasks = [process_product(session, product, i, folder) for i, product in enumerate(products)]
+        await asyncio.gather(*tasks)
 
-        await browser.close()
+    await queue.put(None)
 
-    return result
+async def fetch(Query=None, pincode=None, context=None):
+    global queue
+    queue = asyncio.Queue()
+    producer_task = asyncio.create_task(process_content(Qur=Query, p_c=pincode, context=context))
 
-async def fetch(Qur = None, pincode=None) :
-    try :
-        await process_content(Qur, p_c=pincode)
-    except Exception as e :
-        print("from amazon fetch :", e)
-    return json.dumps(result)
+    while True:
+        item = await queue.get()
+        if item is None:
+            break
+        yield item
 
-
-if __name__ == "__main__":
-    asyncio.run(fetch())
+    await producer_task
