@@ -8,7 +8,7 @@ async def collect_to_queue(source_name, gen, queue):
     async for item in gen:
         if item:
             await queue.put((source_name, item))
-    # Signals that this source is done
+
     await queue.put((source_name, None))
 
 async def merged_printer(sources, lock):
@@ -17,7 +17,6 @@ async def merged_printer(sources, lock):
     total_sources = len(sources)
     product_count = 0
 
-    # Launches all collectors
     tasks = [asyncio.create_task(collect_to_queue(name, gen, queue)) for name, gen in sources]
 
     while total_done < total_sources:
@@ -50,7 +49,6 @@ async def main():
         query = input("Search for : ").strip()
         t0 = time.time()
 
-        # Sources as (name, generator)
         sources = [
             ("Myntra", m.fetch(Query=query, context=webkit_context)),
             ("Amazon", a.fetch(Query=query, context=chrom_context)),
@@ -60,7 +58,7 @@ async def main():
         total = await merged_printer(sources, lock)
         dt = time.time() - t0
 
-        print(f"\n🕒 Done in {dt:.4f}s — Total products scraped: {total}")
+        print(f"\nDone in {dt:.4f}s — Total products scraped: {total}")
 
 if __name__ == "__main__":
     asyncio.run(main())
