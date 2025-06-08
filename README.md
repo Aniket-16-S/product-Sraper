@@ -18,17 +18,6 @@
 
 ---
 
-## 🛠️ Requirements
-
-Install the necessary packages:
-
-```bash / cmd
-pip install playwright asyncio aiohttp
-```
-Then install Playwright’s browser binaries:
-```bash / cmd
-playwright install
-```
 ## 💻 How To Run
 Clone this repo :
 ```bash
