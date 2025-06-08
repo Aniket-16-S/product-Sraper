@@ -1,7 +1,7 @@
 import asyncio, time
-import Myntra as m
-import Amazon as a
-import Flipcart as f
+import scrapeHub.Myntra as m
+import scrapeHub.Amazon as a
+import scrapeHub.Flipcart as f
 from playwright.async_api import async_playwright
 import cache_manager as cache
 from cache_manager import query_processor as nqp
