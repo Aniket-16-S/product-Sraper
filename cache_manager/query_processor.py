@@ -33,28 +33,10 @@ if os.path.exists(CACHE_FILE):
 else:
     query_cache = {}
 
-# SYNONYMS = {
-#     "zumka": "jhumka",
-#     "kurtie": "kurti",
-#     "kurtee": "kurti",
-#     "ear rings": "earrings",
-#     "hand bag": "handbag",
-#     "T shirt": "t-shirt",
-#     "Tshirt": "t-shirt",
-#     "hanky": "handkerchief",
-#     "shoos": "shoes",
-#     "flask": "bottle",
-#     "shades": "sunglasses",
-#     "mount": "holder",
-#     "sunblock": "sunscreen",
-#     "ladies": "womens",
-#     "grooming kit": "grooming essentials",
-#     "smart phone" : "smartphone"
-# }
+
 
 def preprocess(query):
-    # for word, replacement in SYNONYMS.items():
-    #     query = query.replace(word, replacement)
+    ## Comming Soon . . .
     return query
 
 def are_similar(sent1, sent2):

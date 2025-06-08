@@ -9,7 +9,7 @@ from playwright.async_api import async_playwright
 ## Using Multiprocessing so each scraping library has its own instance & dedicated core
 ## ON testing though did not show any improvements in performance. infact lags by 4 to 5 secs.
 ## might be due to overhead of creating new instace of py compiler. 
-## if you are on unix / linux please try fork / forkserver instead of spawn
+## if you are on unix / linux please try fork / forkserver instead of spawn in main to check for any improvements in performance.
 
 def create_browser_info():
     return {
