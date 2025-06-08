@@ -7,6 +7,7 @@ import json
 
 queue = None  
 folder = None
+url_name = {}
 
 def get_url(Qur=None):
     global folder
@@ -24,14 +25,15 @@ def safe_eval(func):
     except Exception:
         return "N/A"
 
-async def download_image(session, img_url, index):
+async def download_image(session, img_url):
     if img_url == "N/A":
         return
     try:
         async with session.get(img_url) as response:
             if response.status == 200:
                 os.makedirs(f"Flipkart/{folder}", exist_ok=True)
-                filename = f"Flipkart/{folder}/product_{index+1}.jpg"
+                name = url_name[img_url]
+                filename = f"Flipkart/{folder}/{name}"
                 with open(filename, "wb") as f:
                     f.write(await response.read())
     except Exception:
@@ -54,13 +56,16 @@ async def process_product(session, product, index):
         delv = safe_eval(lambda: product.find('div', {'class': 'yiggsN'}).get_text())
 
         info = {
-            "Product_link": f"p link : {p_link}",
-            "Name": f"name : {p_company} {p_name}",
-            "Price": f"price : {price} i.e. {o_price} with {dcount}",
-            "Delivery": f"delv : {delv}",
+            "Name": f"{p_company} {p_name}",
+            "product_link": f"https://www.flipkart.com/{p_link}",
+            "review" : None,
+            "price": f"{price} ( {o_price} with {dcount})",
+            "delivery": f"{delv}",
+            "index" : index
         }
-
-        await download_image(session, img_link, index)
+        if img_link :
+            url_name[img_link] = f"product_{index}.jpg"
+            await download_image(session, img_link)
         await queue.put(info)
 
     except Exception:

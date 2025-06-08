@@ -7,6 +7,8 @@ from playwright.async_api import async_playwright
 
 queue = None
 
+name_url = {}
+
 async def get_url(Qur=None, p_c=None):
     if Qur is None:
         query = input("Enter what you wanna Search on Amazon : ").strip()
@@ -21,13 +23,14 @@ async def get_url(Qur=None, p_c=None):
     url = f'https://www.amazon.in/s?k={query}'
     return url, pc, folder
 
-async def download_image(session, url, folder, i):
+async def download_image(session, url, folder):
     try:
         async with session.get(url) as resp:
             if resp.status == 200:
                 content = await resp.read()
                 os.makedirs(f"Amazon/{folder}", exist_ok=True)
-                filename = f"Amazon/{folder}/product_{i+1}.jpg"
+                name = name_url[url]
+                filename = f"Amazon/{folder}/{name}"
                 with open(filename, "wb") as f:
                     f.write(content)
     except Exception:
@@ -79,12 +82,14 @@ async def process_product(session, product, i, folder):
             "Name": name,
             "product_link": f"https://www.amazon.in{product_url}" if product_url else None,
             "review": f"stars:{stars}, no of rev : {no_of_reviews} , {sold} sold in past month",
-            "price": f"Price : {cp} ( {mrp} with {discount} off)",
-            "delivery": f"Delivery : {final_d}"
+            "price": f" {cp} ( {mrp} with {discount} off)",
+            "delivery": f"{final_d}",
+            "index" : i
         }
 
         if img_url:
-            await download_image(session, img_url, folder, i)
+            name_url[img_url] = f"product_{i}.jpg" 
+            await download_image(session, img_url, folder)
 
         if name != '':
             await queue.put(info)
@@ -139,3 +144,4 @@ async def fetch(Query=None, pincode=None, context=None):
         yield item
 
     await producer_task
+    

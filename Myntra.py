@@ -5,7 +5,7 @@ import aiohttp
 
 queue = None  
 folder = None
-
+url_name = {}
 
 def get_url(Query) -> str:
     global folder
@@ -29,12 +29,13 @@ async def smooth_scroll(page, delay=0.05, step=500, pause_at_end=2):
     await asyncio.sleep(pause_at_end)
 
 
-async def download_image(session, url, i):
+async def download_image(session, url):
     try:
         async with session.get(url) as response:
             if response.status == 200:
                 os.makedirs(f"Myntra/{folder}", exist_ok=True)
-                filename = f"Myntra/{folder}/product_{i+1}.jpg"
+                name = url_name[url]
+                filename = f"Myntra/{folder}/{name}"
                 with open(filename, "wb") as f:
                     f.write(await response.read())
     except Exception:
@@ -66,12 +67,16 @@ async def process_product(i, product, session):
 
         info = {
             "Name": f"title : {title}",
-            "Product-link": f"Product link : https://myntra.com/{p_link}",
-            "Price": f"price : {price_unformatted}"
+            "product_link": f"https://myntra.com/{p_link}",
+            "review" : None,
+            "price": f"price : {price_unformatted}",
+            "delivery" : None,
+            "index" : i
         }
 
         if img_link:
-            await download_image(session, img_link, i)
+            url_name[img_link] = f"product_{i}.jpg"
+            await download_image(session, img_link)
 
         await queue.put(info)
 
