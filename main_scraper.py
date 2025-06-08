@@ -6,11 +6,6 @@ from playwright.async_api import async_playwright
 import cache_manager as cache
 from cache_manager import query_processor as nqp
 
-"""
-            Currently, cached images are not stored in order and thats protentially due to async behaviour.
-            working to fix this issue. 
-
-"""
 
 async def collect_to_queue(source_name, gen, queue):
     async for item in gen:
