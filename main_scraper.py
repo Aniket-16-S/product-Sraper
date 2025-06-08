@@ -62,10 +62,16 @@ async def main():
 
         q, is_present = nqp.check(query)
         if is_present :
-            sh = input(f"show results for {q} instead ? (y/n) : ").strip().lower()
-            if  sh == 'y':
-                await cache.retrieve_query_data(q)
-                return
+            sh = input(f"similer results as {q} available in cache.\nshow results for that instead ? (y/n) : ").strip().lower()
+            if  'y' in sh :
+                status = await cache.retrieve_query_data(q)
+                if status :
+                    return
+            elif 'n' in sh :
+                issim = input("    {query}  and  {q} \n    were these queries similer ? (y/n) : ").strip().lower()
+                if 'y' in issim :
+                    await cache.delete_history(q)
+                    
         
 
         sources = [

@@ -123,3 +123,8 @@ async def retrieve_query_data(query):
                     print(f"in cache.py problem while saving img as {e}")
 
     return True
+
+async def delete_history(query) :
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.execute("DELETE FROM product_cache WHERE query = ?", (query,))
+        await db.commit()
