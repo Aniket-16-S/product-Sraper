@@ -6,7 +6,7 @@ from datetime import datetime
 DB_NAME = "product_cache.db"
 
 
-async def init():
+async def init_table():
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute('''
             CREATE TABLE IF NOT EXISTS product_cache (
@@ -105,9 +105,11 @@ async def retrieve_query_data(query):
 
             save_path = os.path.join(src, query)
             os.makedirs(save_path, exist_ok=True)
-
+            product_count:int = -1
             for name, link, price, delivery, rating, img_blob, _, index in rows:
-                print(f". {name}")
+                product_count += 1
+                print(f"\n===== Product {product_count} -- {src} =====")
+                print(f"   Name    : {name}")
                 print(f"   Link    : {link}")
                 print(f"   Price   : {price}")
                 print(f"   Delivery: {delivery}")
