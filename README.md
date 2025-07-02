@@ -71,7 +71,7 @@ Note : Please Wait for 40 to 50 sec for initial setup on first run.
 ---
 
 ## ⚠️ Legal Note
-### This project is for educational use only. Respect each site’s terms of service and robots.txt.
+### This project is for educational use only. Respect each site’s terms of service and robots.txt. The author is not responsible for any misuse or violations of third-party terms and conditions.
 
 ---
 
